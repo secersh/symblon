@@ -1,17 +1,17 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"log"
+
+	"undercover/internal/app/ingestor/router"
+	"undercover/internal/pkg/messaging"
+)
 
 func main() {
-	router := gin.Default()
+	mgg, nil := messaging.NewRabbitMQService("amqp://guest:guest@localhost:5672/")
+	router := router.SetupRouter(mgg)
 
-	v1 := router.Group("api/v1")
-	{
-		v1.GET("/echo", handleEcho)
+	if err := router.Run(":8080"); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
 	}
-
-	router.Run(":8080")
-}
-
-func handleEcho(c *gin.Context) {
 }

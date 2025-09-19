@@ -1,8 +1,11 @@
-module cmd/ingestor
+module undercover
 
 go 1.25.1
 
-require github.com/gin-gonic/gin v1.10.1
+require (
+	github.com/gin-gonic/gin v1.10.1
+	github.com/rabbitmq/amqp091-go v1.10.0
+)
 
 require (
 	github.com/bytedance/sonic v1.11.6 // indirect
