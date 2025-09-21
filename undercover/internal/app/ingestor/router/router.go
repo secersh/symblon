@@ -12,7 +12,7 @@ func SetupRouter(mgg messaging.MessagingService) *gin.Engine {
 
 	apiV1 := router.Group("api/v1")
 	{
-		apiV1.GET("/github", githubHandler.Handle)
+		apiV1.POST("/github", githubHandler.Handle)
 	}
 
 	return router

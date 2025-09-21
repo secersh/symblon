@@ -1,8 +1,10 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
+	"log"
 	"undercover/internal/pkg/messaging"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GitHubHandler struct {
@@ -17,6 +19,8 @@ func NewGitHubHandler(mgg messaging.MessagingService) *GitHubHandler {
 
 func (h *GitHubHandler) Handle(ctx *gin.Context) {
 	h.mgg.Publish("GitHub webhook received")
+
+	log.Print(ctx.Request.Body)
 
 	ctx.JSON(200, gin.H{
 		"message": "GitHub webhook received",
