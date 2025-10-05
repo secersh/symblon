@@ -8,7 +8,12 @@ import (
 )
 
 func main() {
-	mgg, nil := messaging.NewRabbitMQService("amqp://guest:guest@localhost:5672/")
+	mgg, mggErr := messaging.NewRabbitMQService("amqp://guest:guest@localhost:5672/")
+
+	if mggErr != nil {
+		log.Fatalf("Failed to connect to RabbitMQ: %v", mggErr)
+	}
+
 	router := router.SetupRouter(mgg)
 
 	if err := router.Run(":8080"); err != nil {

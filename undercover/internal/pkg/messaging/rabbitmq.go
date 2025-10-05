@@ -11,11 +11,13 @@ type RabbitMQService struct {
 
 func NewRabbitMQService(amqpURL string) (*RabbitMQService, error) {
 	conn, err := amqp.Dial(amqpURL)
+
 	if err != nil {
 		return nil, err
 	}
 
 	ch, err := conn.Channel()
+
 	if err != nil {
 		conn.Close()
 		return nil, err
@@ -28,7 +30,10 @@ func NewRabbitMQService(amqpURL string) (*RabbitMQService, error) {
 }
 
 func (r *RabbitMQService) Publish(message string) error {
-	return nil
+	return r.channel.Publish("symblon", "activity.github", false, false, amqp.Publishing{
+		ContentType: "application/json",
+		Body:        []byte(message),
+	})
 }
 
 func (r *RabbitMQService) Subscribe(queueName string, handler func(string)) error {
