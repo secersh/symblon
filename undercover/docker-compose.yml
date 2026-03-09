@@ -18,6 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: ingestor
     container_name: symblon-ingestor
     ports:
       - "8080:8080"
@@ -26,3 +27,21 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  paquetier:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: paquetier
+    container_name: symblon-paquetier
+    environment:
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672/
+      DATA_DIR: /data
+    volumes:
+      - parquet_data:/data
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  parquet_data:
