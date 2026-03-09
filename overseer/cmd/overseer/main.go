@@ -51,7 +51,7 @@ func main() {
 	log.Printf("overseer: trigger consuming activity.# → queue=overseer")
 
 	// ── HTTP API ─────────────────────────────────────────────────────────────
-	r := router.SetupRouter(agentStore, evalStore)
+	r := router.SetupRouter(agentStore)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

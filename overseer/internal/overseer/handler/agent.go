@@ -14,12 +14,11 @@ import (
 // AgentHandler handles HTTP requests for the agent registry.
 type AgentHandler struct {
 	agents store.AgentStore
-	evals  store.EvaluationStore
 }
 
 // NewAgentHandler creates a new AgentHandler.
-func NewAgentHandler(agents store.AgentStore, evals store.EvaluationStore) *AgentHandler {
-	return &AgentHandler{agents: agents, evals: evals}
+func NewAgentHandler(agents store.AgentStore) *AgentHandler {
+	return &AgentHandler{agents: agents}
 }
 
 // registerAgentRequest is the request body for POST /api/v1/agents.
@@ -125,24 +124,4 @@ func (h *AgentHandler) DeleteAgent(c *gin.Context) {
 		return
 	}
 	c.Status(http.StatusNoContent)
-}
-
-// ListAgentEvaluations handles GET /api/v1/agents/:id/evaluations.
-func (h *AgentHandler) ListAgentEvaluations(c *gin.Context) {
-	evals, err := h.evals.ListByAgent(c.Request.Context(), c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, evals)
-}
-
-// ListActorEvaluations handles GET /api/v1/actors/:login/evaluations.
-func (h *AgentHandler) ListActorEvaluations(c *gin.Context) {
-	evals, err := h.evals.ListByActor(c.Request.Context(), c.Param("login"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, evals)
 }

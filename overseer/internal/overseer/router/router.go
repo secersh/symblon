@@ -11,17 +11,15 @@ import (
 //
 // API surface:
 //
-//	GET    /api/v1/agents                      — list all registered agents
-//	POST   /api/v1/agents                      — register a new agent
-//	GET    /api/v1/agents/:id                  — get agent by ID
-//	PUT    /api/v1/agents/:id                  — update agent definition
-//	DELETE /api/v1/agents/:id                  — remove an agent
-//	GET    /api/v1/agents/:id/evaluations      — list evaluations for an agent
-//	GET    /api/v1/actors/:login/evaluations   — list evaluations for an actor
-func SetupRouter(agents store.AgentStore, evals store.EvaluationStore) *gin.Engine {
+//	GET    /api/v1/agents        — list all registered agents
+//	POST   /api/v1/agents        — register a new agent
+//	GET    /api/v1/agents/:id    — get agent by ID
+//	PUT    /api/v1/agents/:id    — update agent definition
+//	DELETE /api/v1/agents/:id    — remove an agent
+func SetupRouter(agents store.AgentStore) *gin.Engine {
 	r := gin.Default()
 
-	h := handler.NewAgentHandler(agents, evals)
+	h := handler.NewAgentHandler(agents)
 
 	v1 := r.Group("/api/v1")
 	{
@@ -32,12 +30,6 @@ func SetupRouter(agents store.AgentStore, evals store.EvaluationStore) *gin.Engi
 			agentRoutes.GET("/:id", h.GetAgent)
 			agentRoutes.PUT("/:id", h.UpdateAgent)
 			agentRoutes.DELETE("/:id", h.DeleteAgent)
-			agentRoutes.GET("/:id/evaluations", h.ListAgentEvaluations)
-		}
-
-		actorRoutes := v1.Group("/actors")
-		{
-			actorRoutes.GET("/:login/evaluations", h.ListActorEvaluations)
 		}
 	}
 
