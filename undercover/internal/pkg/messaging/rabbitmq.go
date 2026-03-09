@@ -37,5 +37,41 @@ func (r *RabbitMQService) Publish(message string) error {
 }
 
 func (r *RabbitMQService) Subscribe(queueName string, handler func(string)) error {
+	msgs, err := r.channel.Consume(
+		queueName,
+		"",    // consumer tag
+		true,  // auto-ack
+		false, // exclusive
+		false, // no-local
+		false, // no-wait
+		nil,   // args
+	)
+
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for msg := range msgs {
+			handler(string(msg.Body))
+		}
+	}()
+
+	return nil
+}
+
+func (r *RabbitMQService) Close() error {
+	if r.channel != nil {
+		if err := r.channel.Close(); err != nil {
+			return err
+		}
+	}
+
+	if r.connection != nil {
+		if err := r.connection.Close(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

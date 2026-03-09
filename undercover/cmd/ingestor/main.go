@@ -1,22 +1,61 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"undercover/internal/app/ingestor/router"
 	"undercover/internal/pkg/messaging"
 )
 
 func main() {
-	mgg, mggErr := messaging.NewRabbitMQService("amqp://guest:guest@localhost:5672/")
+	amqpURL := os.Getenv("AMQP_URL")
+	if amqpURL == "" {
+		amqpURL = "amqp://guest:guest@localhost:5672/"
+	}
+
+	mgg, mggErr := messaging.NewRabbitMQService(amqpURL)
 
 	if mggErr != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", mggErr)
 	}
 
-	router := router.SetupRouter(mgg)
+	defer func() {
+		if err := mgg.Close(); err != nil {
+			log.Printf("Failed to close RabbitMQ connection: %v", err)
+		}
+	}()
 
-	if err := router.Run(":8080"); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
+	r := router.SetupRouter(mgg)
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
 	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Failed to run server: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exited")
 }

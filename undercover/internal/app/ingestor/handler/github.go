@@ -3,6 +3,7 @@ package handler
 import (
 	"io"
 	"log"
+	"net/http"
 	"undercover/internal/pkg/messaging"
 
 	"github.com/gin-gonic/gin"
@@ -19,12 +20,14 @@ func NewGitHubHandler(mgg messaging.MessagingService) *GitHubHandler {
 }
 
 func (h *GitHubHandler) Handle(ctx *gin.Context) {
+	defer ctx.Request.Body.Close()
+
 	body, err := io.ReadAll(ctx.Request.Body)
 
 	if err != nil {
 		log.Printf("Failed to read request body: %v", err)
 
-		ctx.JSON(400, gin.H{
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid request body",
 		})
 
@@ -36,14 +39,14 @@ func (h *GitHubHandler) Handle(ctx *gin.Context) {
 	if err != nil {
 		log.Printf("Failed to publish message: %v", err)
 
-		ctx.JSON(500, gin.H{
+		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to process webhook",
 		})
 
 		return
 	}
 
-	ctx.JSON(200, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"message": "GitHub webhook received",
 	})
 }
