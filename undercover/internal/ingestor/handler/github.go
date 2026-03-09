@@ -4,7 +4,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"undercover/internal/pkg/messaging"
+	"undercover/pkg/messaging"
 
 	"github.com/gin-gonic/gin"
 )

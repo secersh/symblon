@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"undercover/internal/app/ingestor/router"
-	"undercover/internal/pkg/messaging"
+	"undercover/internal/ingestor/router"
+	"undercover/pkg/messaging"
 )
 
 func main() {

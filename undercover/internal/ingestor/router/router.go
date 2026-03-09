@@ -2,8 +2,8 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"undercover/internal/app/ingestor/handler"
-	"undercover/internal/pkg/messaging"
+	"undercover/internal/ingestor/handler"
+	"undercover/pkg/messaging"
 )
 
 func SetupRouter(mgg messaging.MessagingService) *gin.Engine {
