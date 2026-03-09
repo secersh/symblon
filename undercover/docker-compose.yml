@@ -43,5 +43,40 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  # Cloudflare Tunnel — opt-in for local development.
+  # Exposes the ingestor over the internet so that real GitHub webhooks can
+  # reach a local stack without port-forwarding.
+  #
+  # Usage:
+  #   docker compose --profile tunnel up --build
+  #
+  # Two modes (selected automatically at startup):
+  #   1. Quick tunnel (default, no credentials required):
+  #      Cloudflare assigns a temporary *.trycloudflare.com URL.
+  #      The URL is printed in the cloudflared service logs.
+  #
+  #   2. Named tunnel (persistent URL, requires Cloudflare account):
+  #      Set CLOUDFLARE_TUNNEL_TOKEN in a .env file or your shell, then
+  #      docker compose --profile tunnel up --build
+  #      See .env.example for details.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.2.0
+    container_name: symblon-cloudflared
+    profiles:
+      - tunnel
+    restart: unless-stopped
+    command: >
+      sh -c "
+        if [ -n \"$$CLOUDFLARE_TUNNEL_TOKEN\" ]; then
+          cloudflared tunnel --no-autoupdate run --token $$CLOUDFLARE_TUNNEL_TOKEN;
+        else
+          cloudflared tunnel --no-autoupdate --url http://ingestor:8080;
+        fi
+      "
+    environment:
+      CLOUDFLARE_TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    depends_on:
+      - ingestor
+
 volumes:
   parquet_data:
