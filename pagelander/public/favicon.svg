@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <title>symblon</title>
+  <rect width="128" height="128" rx="28" fill="#0f0f0f"/>
+  <!-- four-pointed star / symbol mark -->
+  <path d="M64 18 C64 18 68 50 82 64 C68 78 64 110 64 110 C64 110 60 78 46 64 C60 50 64 18 64 18 Z" fill="white"/>
+  <path d="M18 64 C18 64 50 60 64 46 C78 60 110 64 110 64 C110 64 78 68 64 82 C50 68 18 64 18 64 Z" fill="white"/>
+</svg>

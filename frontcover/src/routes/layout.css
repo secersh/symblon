@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+@plugin 'daisyui';
+
+html,
+body {
+	overflow-x: clip;
+}

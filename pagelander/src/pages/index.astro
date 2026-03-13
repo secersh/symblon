@@ -1,0 +1,272 @@
+---
+import '../styles/global.css';
+
+const GITHUB_REPO = 'https://github.com/secersh/symblon';
+const GITHUB_APP  = 'https://github.com/apps/symblon-cc';
+const DISCUSSIONS = 'https://github.com/secersh/symblon/discussions';
+const APP_URL     = 'https://app.symblon.cc';
+
+const pipeline = [
+  { icon: '⌨️',  label: 'You commit' },
+  { icon: '⚡',  label: 'Webhook fires' },
+  { icon: '🤖',  label: 'Agent runs' },
+  { icon: '✦',   label: 'Symbol earned' },
+];
+
+const symbols = [
+  { name: 'First Merge',    emoji: '🏅', trigger: 'First pull request merged',           agent: 'pr-milestones' },
+  { name: 'Night Owl',      emoji: '🦉', trigger: 'Commit pushed after midnight',         agent: 'commit-patterns' },
+  { name: 'Doc Wizard',     emoji: '📖', trigger: 'Docs updated in every PR this month',  agent: 'docs-habits' },
+  { name: '100 Streak',     emoji: '🔥', trigger: '100 consecutive days of commits',      agent: 'streaks' },
+  { name: 'Bug Slayer',     emoji: '🐛', trigger: '10 bug issues closed in a week',       agent: 'issue-velocity' },
+  { name: 'Open Sourcerer', emoji: '🌍', trigger: 'First contribution to a public repo',  agent: 'oss-contributions' },
+];
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="generator" content={Astro.generator} />
+  <title>symblon — earn symbols for the code you write</title>
+  <meta name="description" content="symblon turns your GitHub activity into collectible developer symbols. Open source, in development. Join early." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body class="bg-[#0f0f0f] text-white min-h-screen font-mono antialiased">
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 inset-x-0 z-50 border-b border-white/5 bg-[#0f0f0f]/80 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5 group">
+        <svg viewBox="0 0 128 128" class="w-7 h-7 mark-glow" fill="white">
+          <path d="M64 18 C64 18 68 50 82 64 C68 78 64 110 64 110 C64 110 60 78 46 64 C60 50 64 18 64 18 Z"/>
+          <path d="M18 64 C18 64 50 60 64 46 C78 60 110 64 110 64 C110 64 78 68 64 82 C50 68 18 64 18 64 Z"/>
+        </svg>
+        <span class="text-sm font-bold tracking-widest uppercase text-white/80 group-hover:text-white transition-colors">symblon</span>
+      </a>
+      <div class="flex items-center gap-4">
+        <a href={DISCUSSIONS} target="_blank" class="text-xs text-white/40 hover:text-white/80 transition-colors hidden sm:block">Discussions</a>
+        <a href={GITHUB_REPO} target="_blank" class="text-xs text-white/40 hover:text-white/80 transition-colors hidden sm:block">GitHub</a>
+        <a href={APP_URL} class="btn btn-sm btn-outline border-white/20 text-white/70 hover:border-white/60 hover:text-white text-xs">Open App →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="relative min-h-screen grid-bg flex flex-col items-center justify-center text-center px-6 pt-14">
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-white/[0.02] blur-3xl"></div>
+    </div>
+    <div class="relative z-10 max-w-3xl mx-auto flex flex-col items-center gap-4">
+      <svg viewBox="0 0 128 128" class="w-14 h-14 mark-glow" fill="white">
+        <path d="M64 18 C64 18 68 50 82 64 C68 78 64 110 64 110 C64 110 60 78 46 64 C60 50 64 18 64 18 Z"/>
+        <path d="M18 64 C18 64 50 60 64 46 C78 60 110 64 110 64 C110 64 78 68 64 82 C50 68 18 64 18 64 Z"/>
+      </svg>
+      <span class="badge badge-outline border-white/20 text-white/40 text-xs tracking-widest uppercase px-3">Open Source · Early Development</span>
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+        Earn symbols for<br/>
+        <span class="text-white/40">the code you write</span>
+      </h1>
+      <div class="flex flex-col items-center gap-1 text-base sm:text-lg text-white/50">
+        <p class="leading-relaxed">
+          symblon watches your
+          <span class="relative inline-flex items-baseline gap-1.5">
+            <span id="vim-word" class="text-white font-bold relative"></span>
+          </span>
+          activity and turns it into collectible symbols for the things developers actually do.
+        </p>
+      </div>
+      <!-- vim statusline -->
+      <div class="flex items-center justify-between w-full max-w-xl bg-[#1a1a1a] border border-white/8 rounded px-3 py-1.5 font-mono text-xs">
+        <span class="text-white/20 w-24">symblon.cc</span>
+        <span id="vim-mode" class="font-bold text-white/50 w-24 text-center">-- NORMAL --</span>
+        <span class="w-24 flex justify-end">
+          <span id="vim-keys" class="text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded px-1.5 py-0.5 opacity-0 transition-opacity duration-150 w-12 text-center inline-block"></span>
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-3 justify-center">
+        <a href={GITHUB_APP} target="_blank"
+           class="btn btn-primary bg-white text-black border-white hover:bg-white/90 hover:border-white/90 gap-2 font-bold">
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
+          Install GitHub App
+        </a>
+        <a href={GITHUB_REPO} target="_blank"
+           class="btn btn-outline border-white/20 text-white/70 hover:border-white/50 hover:text-white gap-2">
+          <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/>
+          </svg>
+          Star on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="py-24 px-6 border-t border-white/5">
+    <div class="max-w-5xl mx-auto">
+      <p class="text-xs tracking-widest uppercase text-white/30 text-center mb-4">How it works</p>
+      <h2 class="text-2xl sm:text-3xl font-bold text-center mb-16 text-white/80">From commit to symbol in seconds</h2>
+      <div class="flex flex-col sm:flex-row items-center justify-center">
+        {pipeline.map((step, i) => (
+          <div class="flex flex-col sm:flex-row items-center">
+            <div class="flex flex-col items-center gap-3 px-8 py-6">
+              <div class="w-14 h-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-2xl">
+                {step.icon}
+              </div>
+              <span class="text-sm text-white/60 text-center">{step.label}</span>
+            </div>
+            {i < pipeline.length - 1 && (
+              <div class="flex items-center self-start sm:self-auto sm:mt-0 mt-0 sm:pb-7 pb-0">
+                <span class="text-white/20 text-xl rotate-90 sm:rotate-0">→</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div class="mt-20 text-center mb-3">
+        <p class="text-xs tracking-widest uppercase text-white/20">Symbol concepts</p>
+        <p class="text-white/30 text-xs mt-1">Community validated ideas. Not all exist yet.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {symbols.map(s => (
+            <a href={DISCUSSIONS} target="_blank"
+               class="rounded-xl border border-amber-400/30 bg-amber-400/5 p-5 flex flex-col gap-4 group hover:brightness-125 transition-all cursor-pointer">
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-3xl">{s.emoji}</span>
+                  <div>
+                    <p class="font-bold text-sm text-amber-300">{s.name}</p>
+                    <p class="text-xs uppercase tracking-widest opacity-50 text-amber-300">badge</p>
+                  </div>
+                </div>
+                <span class="text-[10px] border border-white/10 text-white/30 rounded px-1.5 py-0.5 font-mono">idea</span>
+              </div>
+              <p class="text-xs text-white/40 leading-relaxed">{s.trigger}</p>
+              <p class="text-[10px] font-mono text-white/20">agent: {s.agent}</p>
+            </a>
+          ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Dev Stories -->
+  <section class="py-24 px-6 border-t border-white/5 grid-bg">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="text-xs tracking-widest uppercase text-white/30 mb-4">Community</p>
+      <h2 class="text-2xl sm:text-3xl font-bold mb-4 text-white/80">Share your dev story</h2>
+      <p class="text-white/40 text-sm max-w-xl mx-auto mb-10 leading-relaxed">
+        What moment in your developer life deserved a symbol? A midnight deploy, a bug you chased for weeks, a first open-source contribution? Share it. Someone might build an agent for it.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10 text-left">
+        {[
+          { cat: '💡 Symbol Ideas', desc: 'Propose a new symbol concept. What should be recognized?' },
+          { cat: '📖 Dev Stories',  desc: 'Share a workflow or achievement worth celebrating.' },
+        ].map(d => (
+          <a href={DISCUSSIONS} target="_blank"
+             class="block rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all p-5 group">
+            <p class="font-bold text-sm mb-2 group-hover:text-white transition-colors">{d.cat}</p>
+            <p class="text-xs text-white/40">{d.desc}</p>
+          </a>
+        ))}
+      </div>
+      <a href={DISCUSSIONS} target="_blank"
+         class="btn btn-outline border-white/20 text-white/60 hover:border-white/50 hover:text-white gap-2">
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M1.75 1h8.5c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0110.25 10H7.061l-2.574 2.573A1.457 1.457 0 012 11.543V10h-.25A1.75 1.75 0 010 8.25v-5.5C0 1.784.784 1 1.75 1zM1.5 2.75v5.5c0 .138.112.25.25.25h1a.75.75 0 01.75.75v2.19l2.72-2.72a.75.75 0 01.53-.22h3.5a.25.25 0 00.25-.25v-5.5a.25.25 0 00-.25-.25h-8.5a.25.25 0 00-.25.25z"/>
+        </svg>
+        Start a discussion
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-12 px-6">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-2.5">
+        <svg viewBox="0 0 128 128" class="w-5 h-5" fill="white">
+          <path d="M64 18 C64 18 68 50 82 64 C68 78 64 110 64 110 C64 110 60 78 46 64 C60 50 64 18 64 18 Z"/>
+          <path d="M18 64 C18 64 50 60 64 46 C78 60 110 64 110 64 C110 64 78 68 64 82 C50 68 18 64 18 64 Z"/>
+        </svg>
+        <span class="text-xs text-white/30 tracking-widest uppercase">symblon</span>
+        <span class="text-white/10 ml-2 text-xs">open source · early development</span>
+      </div>
+      <div class="flex items-center gap-6 text-xs text-white/30">
+        <a href={GITHUB_REPO}  target="_blank" class="hover:text-white/70 transition-colors">GitHub</a>
+        <a href={GITHUB_APP}   target="_blank" class="hover:text-white/70 transition-colors">Install App</a>
+        <a href={DISCUSSIONS}  target="_blank" class="hover:text-white/70 transition-colors">Discussions</a>
+        <a href={APP_URL}                      class="hover:text-white/70 transition-colors">Open App</a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+  const providers = ['GitHub', 'GitLab', 'Bitbucket'];
+  const wordEl = document.getElementById('vim-word')!;
+  const keys   = document.getElementById('vim-keys')!;
+  const modeEl = document.getElementById('vim-mode')!;
+
+  let provIdx = 0;
+  const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+  function showKeys(t: string) { keys.textContent = t; keys.style.opacity = '1'; }
+  function hideKeys() { keys.style.opacity = '0'; }
+  function setMode(t: string, color = 'rgba(255,255,255,0.5)') {
+    modeEl.textContent = t; modeEl.style.color = color;
+  }
+  function normalCursor(text: string) {
+    wordEl.innerHTML =
+      `<span style="background:rgba(255,255,255,0.85);color:#0f0f0f;padding:0 2px">${text[0]}</span>` +
+      `<span>${text.slice(1)}</span>`;
+  }
+  function insertCursor(text: string) {
+    wordEl.innerHTML =
+      `<span>${text}</span>` +
+      `<span style="display:inline-block;width:2px;height:1em;background:white;vertical-align:text-bottom;margin-left:1px"></span>`;
+  }
+
+  async function cycle() {
+    normalCursor(providers[0]);
+    setMode('-- NORMAL --');
+
+    while (true) {
+      const current = providers[provIdx];
+      const next    = providers[(provIdx + 1) % providers.length];
+
+      setMode('-- NORMAL --', 'rgba(255,255,255,0.5)');
+      normalCursor(current);
+      hideKeys();
+      await delay(1800);
+
+      for (const k of ['c', 'i', 'w']) { showKeys(k); await delay(200); }
+      showKeys('ciw');
+      await delay(160);
+
+      wordEl.innerHTML = `<span style="background:rgba(255,255,255,0.15);color:white;padding:0 2px">${current}</span>`;
+      await delay(220);
+
+      insertCursor('');
+      setMode('-- INSERT --', '#7dd3fc');
+      hideKeys();
+      await delay(180);
+
+      for (let i = 1; i <= next.length; i++) { insertCursor(next.slice(0, i)); await delay(85); }
+      await delay(500);
+
+      showKeys('<Esc>');
+      await delay(380);
+      hideKeys();
+      setMode('-- NORMAL --', 'rgba(255,255,255,0.5)');
+      normalCursor(next);
+
+      provIdx = (provIdx + 1) % providers.length;
+      await delay(300);
+    }
+  }
+
+  cycle();
+</script>
+
+</body>
+</html>
