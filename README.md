@@ -4,7 +4,7 @@
 
 Symblon watches your GitHub activity and issues **symbols** — achievements with full context: which org, which repo, which moment. Collect them, share them, build a profile that actually means something.
 
-**[symblon.cc](https://symblon.cc)** — early development, not yet open for signups.
+**[symblon.cc](https://symblon.cc)** — early development, open for signups now.
 
 ---
 
