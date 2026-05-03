@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect x="5" y="5" width="90" height="90" rx="4" fill="#0d1117" stroke="#39d353" stroke-width="2"/>
+  <text x="14" y="40" font-family="monospace" font-size="9" fill="#39d353">$ patch</text>
+  <text x="14" y="54" font-family="monospace" font-size="9" fill="#39d353">--zero-day</text>
+  <text x="14" y="68" font-family="monospace" font-size="9" fill="#39d353">x5 bugs</text>
+</svg>

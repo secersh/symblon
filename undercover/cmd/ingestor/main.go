@@ -31,7 +31,12 @@ func main() {
 		}
 	}()
 
-	r := router.SetupRouter(mgg)
+	webhookSecret := os.Getenv("GITHUB_WEBHOOK_SECRET")
+	if webhookSecret == "" {
+		log.Println("ingestor: WARNING — GITHUB_WEBHOOK_SECRET not set, signature verification disabled")
+	}
+
+	r := router.SetupRouter(mgg, webhookSecret)
 
 	srv := &http.Server{
 		Addr:    ":8080",

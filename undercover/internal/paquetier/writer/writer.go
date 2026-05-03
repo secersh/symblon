@@ -50,6 +50,7 @@ type Writer struct {
 	db      *sql.DB
 	destDir string // local path OR s3://bucket/prefix
 	mu      sync.Mutex
+	actors  map[string]struct{} // actor_logins buffered since last flush
 }
 
 // NewWriter opens an in-memory DuckDB instance and returns a ready-to-use
@@ -106,7 +107,7 @@ func NewWriter(dataDir string, s3 *S3Config) (*Writer, error) {
 		return nil, fmt.Errorf("writer: create table: %w", err)
 	}
 
-	return &Writer{db: db, destDir: destDir}, nil
+	return &Writer{db: db, destDir: destDir, actors: make(map[string]struct{})}, nil
 }
 
 // configureS3 installs and configures DuckDB's httpfs extension for the given
@@ -154,24 +155,26 @@ func (w *Writer) Insert(e *event.WebhookEvent) error {
 		int(ts.Month()),
 		ts.Day(),
 	)
+	if err == nil && e.ActorLogin != "" {
+		w.actors[e.ActorLogin] = struct{}{}
+	}
 	return err
 }
 
-// Flush writes all buffered events to Hive-partitioned Parquet files and then
-// clears the in-memory buffer.  Calling Flush on an empty buffer is a no-op.
-// Each flush uses a nanosecond timestamp in the filename so that successive
-// flushes within the same partition directory produce distinct files.
-func (w *Writer) Flush() error {
+// Flush writes all buffered events to Hive-partitioned Parquet files, clears
+// the in-memory buffer, and returns the distinct actor_logins that were flushed.
+// Returns nil actors and no error when the buffer is empty.
+func (w *Writer) Flush() ([]string, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	row := w.db.QueryRow("SELECT COUNT(*) FROM webhook_events")
 	var n int64
 	if err := row.Scan(&n); err != nil {
-		return fmt.Errorf("writer: count rows: %w", err)
+		return nil, fmt.Errorf("writer: count rows: %w", err)
 	}
 	if n == 0 {
-		return nil
+		return nil, nil
 	}
 
 	pattern := fmt.Sprintf("events_%d", time.Now().UnixNano())
@@ -182,19 +185,25 @@ func (w *Writer) Flush() error {
 		w.destDir, pattern,
 	)
 	if _, err := w.db.Exec(query); err != nil {
-		return fmt.Errorf("writer: flush parquet: %w", err)
+		return nil, fmt.Errorf("writer: flush parquet: %w", err)
 	}
 
 	if _, err := w.db.Exec("DELETE FROM webhook_events"); err != nil {
-		return fmt.Errorf("writer: clear buffer: %w", err)
+		return nil, fmt.Errorf("writer: clear buffer: %w", err)
 	}
 
-	return nil
+	actors := make([]string, 0, len(w.actors))
+	for a := range w.actors {
+		actors = append(actors, a)
+	}
+	w.actors = make(map[string]struct{})
+
+	return actors, nil
 }
 
 // Close flushes any remaining events and closes the DuckDB connection.
 func (w *Writer) Close() error {
-	if err := w.Flush(); err != nil {
+	if _, err := w.Flush(); err != nil {
 		return err
 	}
 	return w.db.Close()

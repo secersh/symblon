@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../schemas/agent.schema.json
 name: Bug Squasher
 handle: bug-squasher
-version: 1.0.5
+version: 1.0.6
 description: "Awarded for hunting down and closing bug issues on GitHub."
 visibility: public
 pricing:

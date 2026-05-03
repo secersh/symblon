@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symblon.cc/schemas/agent.schema.json",
+  "title": "Symblon Agent Manifest",
+  "description": "Manifest for a Symblon agent package (agent.yaml).",
+  "type": "object",
+  "required": ["name", "handle", "version", "description", "visibility", "symbols"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Human-readable display name shown in the marketplace."
+    },
+    "handle": {
+      "type": "string",
+      "description": "URL-safe slug. Becomes /<publisher>/<handle> in the registry.",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Semver version string.",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description shown on the marketplace listing.",
+      "maxLength": 280
+    },
+    "visibility": {
+      "type": "string",
+      "description": "Controls who can discover and install this agent.",
+      "enum": ["public", "org"]
+    },
+    "pricing": {
+      "type": "object",
+      "description": "Pricing configuration. Omit or set model to free for free agents.",
+      "required": ["model"],
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": ["free", "paid"]
+        },
+        "price_usd": {
+          "type": "number",
+          "description": "Price in USD. Required when model is paid.",
+          "minimum": 0.99,
+          "multipleOf": 0.01
+        }
+      },
+      "if": {
+        "properties": { "model": { "const": "paid" } }
+      },
+      "then": {
+        "required": ["price_usd"]
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "description": "List of symbols this agent can issue. Each symbol must have a matching .sql in rules/ and .svg in themes/default/.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable identifier used as the filename key for rules and default theme assets.",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "name": {
+            "type": "string",
+            "description": "Default display name. Overridden per theme in theme.yaml."
+          },
+          "description": {
+            "type": "string",
+            "description": "Shown on the symbol detail view.",
+            "maxLength": 280
+          },
+          "type": {
+            "type": "string",
+            "description": "Evaluation strategy.",
+            "enum": ["realtime", "temporal"]
+          },
+          "window_hours": {
+            "type": "integer",
+            "description": "Time window in hours for temporal symbols. Required when type is temporal.",
+            "minimum": 1
+          }
+        },
+        "if": {
+          "properties": { "type": { "const": "temporal" } }
+        },
+        "then": {
+          "required": ["window_hours"]
+        }
+      }
+    }
+  }
+}

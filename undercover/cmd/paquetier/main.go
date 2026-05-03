@@ -17,7 +17,7 @@ import (
 const (
 	queueName  = "paquetier"
 	routingKey = "activity.#"
-	flushEvery = 30 * time.Second
+	flushEvery = 5 * time.Second
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 			Endpoint:  ep,
 			Region:    getEnvOr("S3_REGION", "auto"),
 			Bucket:    os.Getenv("S3_BUCKET"),
-			Prefix:    getEnvOr("S3_PREFIX", "events"),
+			Prefix:    "events",
 			AccessKey: os.Getenv("S3_ACCESS_KEY"),
 			SecretKey: os.Getenv("S3_SECRET_KEY"),
 		}
@@ -101,13 +101,36 @@ func main() {
 	for {
 		select {
 		case <-ticker.C:
-			if err := w.Flush(); err != nil {
+			actors, err := w.Flush()
+			if err != nil {
 				log.Printf("Periodic flush failed: %v", err)
+				continue
 			}
+			if len(actors) == 0 {
+				continue
+			}
+			publishFlushed(mgg, actors)
 		case <-quit:
 			log.Println("Shutting down paquetier...")
 			return
 		}
+	}
+}
+
+func publishFlushed(mq messaging.MessagingService, actors []string) {
+	evt := messaging.ParquetFlushedEvent{
+		FlushedAt: time.Now().UTC(),
+		Actors:    actors,
+	}
+	body, err := json.Marshal(evt)
+	if err != nil {
+		log.Printf("paquetier: marshal flushed event: %v", err)
+		return
+	}
+	if err := mq.PublishTo(messaging.RoutingKeyParquetFlushed, string(body)); err != nil {
+		log.Printf("paquetier: publish flushed event: %v", err)
+	} else {
+		log.Printf("paquetier: flushed %d actors → parquet.flushed", len(actors))
 	}
 }
 

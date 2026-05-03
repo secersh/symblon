@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../../../schemas/theme.schema.json
+symbols:
+  first-blood:
+    name: "bug rm -rf"
+    asset: bug-rm-rf.svg
+  squasher:
+    name: "zero-day squash"
+    asset: zero-day-squash.svg

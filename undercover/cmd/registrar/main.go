@@ -87,7 +87,7 @@ func main() {
 	log.Println("registrar: JWKS ready")
 
 	// ── HTTP API ─────────────────────────────────────────────────────────────
-	r := router.SetupRouter(db, db, uploader, mq, jwks)
+	r := router.SetupRouter(db, db, db, uploader, mq, jwks)
 
 	srv := &http.Server{
 		Addr:    ":" + port,

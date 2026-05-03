@@ -241,6 +241,39 @@ func (s *PostgresStore) GetInstall(ctx context.Context, userID, agentID string) 
 	return inst, nil
 }
 
+// ListIssuedSymbols returns all symbols issued to the given user, joined with symbol metadata.
+func (s *PostgresStore) ListIssuedSymbols(ctx context.Context, userID string) ([]IssuedSymbol, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT i.id, i.agent_id, i.symbol_id, i.issued_at,
+		       s.name, s.description, s.image_url
+		FROM issued_symbols i
+		JOIN symbols s ON s.symbol_id = i.symbol_id AND s.agent_id = (
+			SELECT a.id FROM agents a
+			WHERE a.publisher || '/' || a.handle || '/' || a.version = i.agent_id
+			LIMIT 1
+		)
+		WHERE i.user_id = $1
+		ORDER BY i.issued_at DESC
+	`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("ListIssuedSymbols: %w", err)
+	}
+	defer rows.Close()
+
+	var result []IssuedSymbol
+	for rows.Next() {
+		var s IssuedSymbol
+		if err := rows.Scan(&s.ID, &s.AgentID, &s.SymbolID, &s.IssuedAt, &s.Name, &s.Description, &s.ImageURL); err != nil {
+			return nil, fmt.Errorf("ListIssuedSymbols scan: %w", err)
+		}
+		result = append(result, s)
+	}
+	if result == nil {
+		result = []IssuedSymbol{}
+	}
+	return result, rows.Err()
+}
+
 // Migrate runs the schema migrations. Safe to call on every startup.
 func (s *PostgresStore) Migrate(ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `

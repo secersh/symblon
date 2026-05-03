@@ -26,6 +26,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		return {
 			...a,
 			installed: !!inst,
+			owned: !!inst,
 			installedVersion: inst?.version ?? null
 		};
 	});
@@ -34,7 +35,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	for (const inst of installed) {
 		const key = `${inst.publisher}/${inst.handle}`;
 		if (!catalog.some((a) => `${a.publisher}/${a.handle}` === key)) {
-			agents.push({ ...inst, installed: true, installedVersion: inst.version });
+			agents.push({ ...inst, installed: true, owned: true, installedVersion: inst.version });
 		}
 	}
 

@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../../../schemas/theme.schema.json
+symbols:
+  first-blood:
+    name: "Pest Control"
+    asset: pest-control.svg
+  squasher:
+    name: "The Exterminator"
+    asset: exterminator.svg

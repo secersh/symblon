@@ -6,9 +6,9 @@ import (
 	"undercover/pkg/messaging"
 )
 
-func SetupRouter(mgg messaging.MessagingService) *gin.Engine {
+func SetupRouter(mgg messaging.MessagingService, webhookSecret string) *gin.Engine {
 	router := gin.Default()
-	githubHandler := handler.NewGitHubHandler(mgg)
+	githubHandler := handler.NewGitHubHandler(mgg, webhookSecret)
 
 	apiV1 := router.Group("api/v1")
 	{

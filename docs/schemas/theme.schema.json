@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://symblon.cc/schemas/theme.schema.json",
+  "title": "Symblon Theme Manifest",
+  "description": "Per-theme overrides for symbol names and assets (themes/<name>/theme.yaml). Not used in themes/default/ — default asset filenames must match symbol IDs by convention.",
+  "type": "object",
+  "required": ["symbols"],
+  "additionalProperties": false,
+  "properties": {
+    "symbols": {
+      "type": "object",
+      "description": "Map of symbol ID to theme-specific overrides. Every symbol declared in agent.yaml must be present.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name", "asset"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Theme-specific display name shown in the UI when this theme is active."
+          },
+          "asset": {
+            "type": "string",
+            "description": "SVG filename relative to this theme folder.",
+            "pattern": "^[a-z0-9-]+\\.svg$"
+          }
+        }
+      }
+    }
+  }
+}

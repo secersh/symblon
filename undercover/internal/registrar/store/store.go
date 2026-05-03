@@ -59,6 +59,23 @@ type AgentStore interface {
 	SymbolsByAgentIDs(ctx context.Context, agentIDs []string) (map[string][]Symbol, error)
 }
 
+// IssuedSymbol is a symbol that has been granted to a user.
+type IssuedSymbol struct {
+	ID       string    `json:"id"`
+	AgentID  string    `json:"agent_id"`
+	SymbolID string    `json:"symbol_id"`
+	IssuedAt time.Time `json:"issued_at"`
+	// Joined from symbols table
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	ImageURL    string `json:"image_url,omitempty"`
+}
+
+// SymbolStore is the read interface for issued symbols.
+type SymbolStore interface {
+	ListIssuedSymbols(ctx context.Context, userID string) ([]IssuedSymbol, error)
+}
+
 // InstallStore is the read/write interface for user agent installs.
 type InstallStore interface {
 	// Install records a user installing an agent. Idempotent.

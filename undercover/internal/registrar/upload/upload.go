@@ -88,9 +88,10 @@ func (u *S3Uploader) UploadPublic(ctx context.Context, key string, content io.Re
 		bucket = u.cfg.Bucket
 	}
 	_, err := u.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(fullKey),
-		Body:   content,
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(fullKey),
+		Body:        content,
+		ContentType: aws.String("image/svg+xml"),
 	})
 	if err != nil {
 		return "", fmt.Errorf("upload public %s: %w", fullKey, err)
