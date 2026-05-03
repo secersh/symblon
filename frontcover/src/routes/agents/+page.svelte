@@ -7,7 +7,7 @@
 
 	type AgentWithInstalled = Agent & { installed: boolean };
 
-	let agents = $state<AgentWithInstalled[]>(data.agents);
+	let agents = $state<AgentWithInstalled[]>([...data.agents]);
 
 	type Tab = 'mine' | 'discover';
 	let tab = $state<Tab>('mine');
