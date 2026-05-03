@@ -78,15 +78,19 @@ type SymbolStore interface {
 
 // InstallStore is the read/write interface for user agent installs.
 type InstallStore interface {
-	// Install records a user installing an agent. Idempotent.
+	// Install records a user installing an agent. Idempotent; clears removed_at on reinstall.
 	Install(ctx context.Context, userID, agentID string) (*Install, error)
 
-	// Uninstall removes an install record.
+	// Uninstall soft-deletes an install record (sets removed_at).
 	Uninstall(ctx context.Context, userID, agentID string) error
 
 	// GetInstall returns the install record for a user/agent pair.
 	GetInstall(ctx context.Context, userID, agentID string) (*Install, error)
 
-	// ListInstalledAgents returns the full agent records installed by the given user.
+	// ListInstalledAgents returns active (non-removed) agent records for the given user.
 	ListInstalledAgents(ctx context.Context, userID string) ([]*Agent, error)
+
+	// ListOwnedAgentKeys returns "publisher/handle" for every agent the user has
+	// ever installed, regardless of whether it is currently active.
+	ListOwnedAgentKeys(ctx context.Context, userID string) ([]string, error)
 }

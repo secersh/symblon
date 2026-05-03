@@ -59,6 +59,14 @@ export async function installAgent(
 	if (!res.ok) throw new Error(`installAgent: ${res.status}`);
 }
 
+export async function listOwnedAgentKeys(token: string): Promise<string[]> {
+	const res = await fetch(`${REGISTRAR_URL}/registrar/v1/me/owned`, {
+		headers: headers(token)
+	});
+	if (!res.ok) throw new Error(`listOwnedAgentKeys: ${res.status}`);
+	return res.json();
+}
+
 export async function uninstallAgent(
 	token: string,
 	publisher: string,

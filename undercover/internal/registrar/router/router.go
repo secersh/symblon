@@ -38,6 +38,7 @@ func SetupRouter(agents store.AgentStore, installs store.InstallStore, symbols s
 		{
 			protected.POST("/agents", publish.Publish)
 			protected.GET("/me/agents", install.ListInstalled)
+			protected.GET("/me/owned", install.ListOwned)
 			protected.GET("/me/symbols", sym.ListIssued)
 
 			agent := protected.Group("/agents/:publisher/:handle/:version")

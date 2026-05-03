@@ -93,7 +93,7 @@ func (h *InstallHandler) Uninstall(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// ListInstalled handles GET /registrar/v1/me/agents — returns installed agents for the current user.
+// ListInstalled handles GET /registrar/v1/me/agents — returns active installed agents.
 func (h *InstallHandler) ListInstalled(c *gin.Context) {
 	userID := auth.UserID(c)
 	agents, err := h.installs.ListInstalledAgents(c.Request.Context(), userID)
@@ -105,6 +105,21 @@ func (h *InstallHandler) ListInstalled(c *gin.Context) {
 		agents = []*store.Agent{}
 	}
 	c.JSON(http.StatusOK, agents)
+}
+
+// ListOwned handles GET /registrar/v1/me/owned — returns "publisher/handle" keys for all
+// agents the user has ever installed, including removed ones.
+func (h *InstallHandler) ListOwned(c *gin.Context) {
+	userID := auth.UserID(c)
+	keys, err := h.installs.ListOwnedAgentKeys(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if keys == nil {
+		keys = []string{}
+	}
+	c.JSON(http.StatusOK, keys)
 }
 
 func (h *InstallHandler) emitInstalled(userID, actorLogin string, agent *store.Agent, symbols []store.Symbol, installedAt time.Time) error {

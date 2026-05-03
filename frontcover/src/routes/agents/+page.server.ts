@@ -3,6 +3,7 @@ import type { PageServerLoad, Actions } from './$types';
 import {
 	listAgents,
 	listInstalledAgents,
+	listOwnedAgentKeys,
 	installAgent,
 	uninstallAgent
 } from '$lib/api/registrar';
@@ -12,21 +13,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const token = locals.session.access_token;
 
-	const [catalog, installed] = await Promise.all([
+	const [catalog, installed, ownedKeys] = await Promise.all([
 		listAgents(),
-		listInstalledAgents(token)
+		listInstalledAgents(token),
+		listOwnedAgentKeys(token)
 	]);
 
-	// Map publisher/handle → installed agent (version may differ from catalog)
 	const installedMap = new Map(installed.map((a) => [`${a.publisher}/${a.handle}`, a]));
+	const ownedSet = new Set(ownedKeys);
 
-	// Merge: every catalog agent gets installed status + installed version if applicable
+	// Merge: every catalog agent gets installed status + owned flag + installed version
 	const agents = catalog.map((a) => {
 		const inst = installedMap.get(`${a.publisher}/${a.handle}`);
 		return {
 			...a,
 			installed: !!inst,
-			owned: !!inst,
+			owned: ownedSet.has(`${a.publisher}/${a.handle}`),
 			installedVersion: inst?.version ?? null
 		};
 	});

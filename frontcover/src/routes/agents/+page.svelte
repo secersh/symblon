@@ -58,7 +58,6 @@
 	function confirmRemove() {
 		removeDialog.close();
 		agents = agents.map(a => a.id === pendingRemove!.id ? { ...a, installed: false } : a);
-		// owned stays true — paid agents remain in user's library after removal
 		removeForm.requestSubmit();
 	}
 

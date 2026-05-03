@@ -174,13 +174,14 @@ func (s *PostgresStore) SymbolsByAgent(ctx context.Context, agentID string) ([]S
 	return symbols, rows.Err()
 }
 
-// Install records a user installing an agent. Idempotent.
+// Install records a user installing an agent. Idempotent; clears removed_at on reinstall.
 func (s *PostgresStore) Install(ctx context.Context, userID, agentID string) (*Install, error) {
 	inst := &Install{}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO installs (user_id, agent_id)
-		VALUES ($1, $2)
-		ON CONFLICT (user_id, agent_id) DO UPDATE SET user_id = EXCLUDED.user_id
+		INSERT INTO installs (user_id, agent_id, installed_at, removed_at)
+		VALUES ($1, $2, now(), NULL)
+		ON CONFLICT (user_id, agent_id) DO UPDATE
+			SET installed_at = now(), removed_at = NULL
 		RETURNING id, user_id, agent_id, installed_at
 	`, userID, agentID).Scan(&inst.ID, &inst.UserID, &inst.AgentID, &inst.InstalledAt)
 	if err != nil {
@@ -189,23 +190,23 @@ func (s *PostgresStore) Install(ctx context.Context, userID, agentID string) (*I
 	return inst, nil
 }
 
-// Uninstall removes an install record.
+// Uninstall soft-deletes an install record by setting removed_at.
 func (s *PostgresStore) Uninstall(ctx context.Context, userID, agentID string) error {
 	_, err := s.pool.Exec(ctx,
-		"DELETE FROM installs WHERE user_id = $1 AND agent_id = $2",
+		"UPDATE installs SET removed_at = now() WHERE user_id = $1 AND agent_id = $2",
 		userID, agentID,
 	)
 	return err
 }
 
-// ListInstalledAgents returns the full agent records installed by the given user.
+// ListInstalledAgents returns active (non-removed) agent records for the given user.
 func (s *PostgresStore) ListInstalledAgents(ctx context.Context, userID string) ([]*Agent, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT a.id, a.publisher, a.publisher_name, a.handle, a.version, a.name, a.description,
 		       a.visibility, a.pricing_model, a.price_usd, a.published_at
 		FROM installs i
 		JOIN agents a ON a.id = i.agent_id
-		WHERE i.user_id = $1
+		WHERE i.user_id = $1 AND i.removed_at IS NULL
 		ORDER BY i.installed_at DESC
 	`, userID)
 	if err != nil {
@@ -225,6 +226,30 @@ func (s *PostgresStore) ListInstalledAgents(ctx context.Context, userID string) 
 		agents = append(agents, a)
 	}
 	return agents, rows.Err()
+}
+
+// ListOwnedAgentKeys returns "publisher/handle" for every agent the user has ever installed.
+func (s *PostgresStore) ListOwnedAgentKeys(ctx context.Context, userID string) ([]string, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT DISTINCT a.publisher || '/' || a.handle
+		FROM installs i
+		JOIN agents a ON a.id = i.agent_id
+		WHERE i.user_id = $1
+	`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("ListOwnedAgentKeys: %w", err)
+	}
+	defer rows.Close()
+
+	var keys []string
+	for rows.Next() {
+		var k string
+		if err := rows.Scan(&k); err != nil {
+			return nil, fmt.Errorf("ListOwnedAgentKeys scan: %w", err)
+		}
+		keys = append(keys, k)
+	}
+	return keys, rows.Err()
 }
 
 // GetInstall returns the install record for a user/agent pair.
@@ -314,8 +339,10 @@ func (s *PostgresStore) Migrate(ctx context.Context) error {
 			user_id      TEXT NOT NULL,
 			agent_id     UUID NOT NULL REFERENCES agents(id),
 			installed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+			removed_at   TIMESTAMPTZ,
 			UNIQUE (user_id, agent_id)
 		);
+		ALTER TABLE installs ADD COLUMN IF NOT EXISTS removed_at TIMESTAMPTZ;
 	`)
 	if err != nil {
 		return fmt.Errorf("registrar: migrate: %w", err)
