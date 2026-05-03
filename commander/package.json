@@ -1,0 +1,26 @@
+{
+  "name": "symblon-commander",
+  "version": "0.1.0",
+  "description": "Symblon Commander — CLI for publishing agents",
+  "bin": {
+    "symblon": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "archiver": "^7.0.1",
+    "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/archiver": "^6.0.3",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.0"
+  }
+}
