@@ -1,4 +1,4 @@
-import { REGISTRAR_URL } from '$env/dynamic/private';
+import { REGISTRAR_URL } from '$env/static/private';
 
 export interface AgentSymbol {
 	id: string;
