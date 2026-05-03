@@ -5,7 +5,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	type AgentWithInstalled = Agent & { installed: boolean };
+	type AgentWithInstalled = Agent & { installed: boolean; installedVersion: string | null };
 
 	let agents = $state<AgentWithInstalled[]>([...data.agents]);
 
@@ -22,6 +22,10 @@
 				? [...expandedSymbols].filter((x) => x !== id)
 				: [...expandedSymbols, id]
 		);
+	}
+
+	function hasUpdate(agent: AgentWithInstalled) {
+		return agent.installed && agent.installedVersion !== null && agent.installedVersion !== agent.version;
 	}
 </script>
 
@@ -70,12 +74,21 @@
 				<div class="space-y-3">
 					{#each myAgents as agent}
 						{@const open = expandedSymbols.has(agent.id)}
-						<div class="card bg-base-100 border border-base-200">
+						{@const needsUpdate = hasUpdate(agent)}
+						<div class="card bg-base-100 border {needsUpdate ? 'border-warning/50' : 'border-base-200'}">
 							<div class="card-body p-4">
 								<div class="flex items-start gap-4">
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2 flex-wrap mb-0.5">
 											<h3 class="text-sm font-semibold">{agent.name}</h3>
+											<span class="badge badge-sm badge-ghost text-[10px] font-mono">
+												v{agent.installedVersion ?? agent.version}
+											</span>
+											{#if needsUpdate}
+												<span class="badge badge-sm badge-warning text-[10px]">
+													v{agent.version} available
+												</span>
+											{/if}
 											<span class="badge badge-sm badge-ghost text-[10px]">
 												{agent.symbols.some(s => s.type === 'temporal') ? '⏱ temporal' : '⚡ real-time'}
 											</span>
@@ -101,21 +114,45 @@
 											</span>
 										</div>
 									</div>
-									<form
-										method="POST"
-										action="?/uninstall"
-										use:enhance={() => {
-											agents = agents.map(a => a.id === agent.id ? { ...a, installed: false } : a);
-											return async ({ update }) => update({ reset: false });
-										}}
-									>
-										<input type="hidden" name="publisher" value={agent.publisher} />
-										<input type="hidden" name="handle" value={agent.handle} />
-										<input type="hidden" name="version" value={agent.version} />
-										<button class="btn btn-xs btn-ghost text-error opacity-40 hover:opacity-100 shrink-0" type="submit">
-											Remove
-										</button>
-									</form>
+									<div class="flex flex-col gap-1 shrink-0">
+										{#if needsUpdate}
+											<form
+												method="POST"
+												action="?/update"
+												use:enhance={() => {
+													agents = agents.map(a =>
+														a.id === agent.id
+															? { ...a, installedVersion: a.version }
+															: a
+													);
+													return async ({ update }) => update({ reset: false });
+												}}
+											>
+												<input type="hidden" name="publisher" value={agent.publisher} />
+												<input type="hidden" name="handle" value={agent.handle} />
+												<input type="hidden" name="old_version" value={agent.installedVersion} />
+												<input type="hidden" name="new_version" value={agent.version} />
+												<button class="btn btn-xs btn-warning" type="submit">
+													Update
+												</button>
+											</form>
+										{/if}
+										<form
+											method="POST"
+											action="?/uninstall"
+											use:enhance={() => {
+												agents = agents.map(a => a.id === agent.id ? { ...a, installed: false } : a);
+												return async ({ update }) => update({ reset: false });
+											}}
+										>
+											<input type="hidden" name="publisher" value={agent.publisher} />
+											<input type="hidden" name="handle" value={agent.handle} />
+											<input type="hidden" name="version" value={agent.installedVersion ?? agent.version} />
+											<button class="btn btn-xs btn-ghost text-error opacity-40 hover:opacity-100" type="submit">
+												Remove
+											</button>
+										</form>
+									</div>
 								</div>
 
 								{#if open}
@@ -154,6 +191,9 @@
 									<div class="flex-1 min-w-0">
 										<div class="flex items-center gap-2 flex-wrap mb-0.5">
 											<h3 class="text-sm font-semibold">{agent.name}</h3>
+											<span class="badge badge-sm badge-ghost text-[10px] font-mono">
+												v{agent.version}
+											</span>
 											<span class="badge badge-sm badge-ghost text-[10px]">
 												{agent.symbols.some(s => s.type === 'temporal') ? '⏱ temporal' : '⚡ real-time'}
 											</span>
@@ -183,7 +223,7 @@
 										method="POST"
 										action="?/install"
 										use:enhance={() => {
-											agents = agents.map(a => a.id === agent.id ? { ...a, installed: true } : a);
+											agents = agents.map(a => a.id === agent.id ? { ...a, installed: true, installedVersion: a.version } : a);
 											tab = 'mine';
 											return async ({ update }) => update({ reset: false });
 										}}

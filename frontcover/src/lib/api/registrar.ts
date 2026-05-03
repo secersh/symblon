@@ -35,13 +35,13 @@ export async function listAgents(): Promise<Agent[]> {
 	return res.json();
 }
 
-export async function listInstalledAgentIDs(token: string): Promise<string[]> {
+export async function listInstalledAgents(token: string): Promise<Agent[]> {
 	const res = await fetch(`${REGISTRAR_URL}/registrar/v1/me/agents`, {
 		headers: headers(token)
 	});
-	if (!res.ok) throw new Error(`listInstalledAgentIDs: ${res.status}`);
+	if (!res.ok) throw new Error(`listInstalledAgents: ${res.status}`);
 	const data = await res.json();
-	return data.agent_ids ?? [];
+	return (data ?? []).map((a: Agent) => ({ ...a, symbols: a.symbols ?? [] }));
 }
 
 export async function installAgent(
