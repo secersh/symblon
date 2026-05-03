@@ -15,19 +15,19 @@ import (
 // Uploader uploads raw bytes to object storage and returns the stored path.
 type Uploader interface {
 	Upload(ctx context.Context, key string, content io.Reader) (path string, err error)
-	// PublicURL returns the browser-accessible HTTPS URL for the given key.
-	PublicURL(key string) string
+	UploadPublic(ctx context.Context, key string, content io.Reader) (publicURL string, err error)
 }
 
 // S3Config holds credentials for an S3-compatible storage backend (e.g. Supabase Storage).
 type S3Config struct {
-	Endpoint      string // e.g. https://<project>.storage.supabase.co/storage/v1/s3
-	PublicBaseURL string // e.g. https://<project>.supabase.co/storage/v1/object/public/<bucket>
-	Region        string
-	Bucket        string
-	Prefix        string // e.g. "agents"
-	AccessKey     string
-	SecretKey     string
+	Endpoint        string // e.g. https://<project>.storage.supabase.co/storage/v1/s3
+	Region          string
+	Bucket          string // private bucket (SQL files)
+	PublicBucket    string // public bucket (theme SVGs)
+	PublicBaseURL   string // e.g. https://<project>.supabase.co/storage/v1/object/public/<public-bucket>
+	Prefix          string // e.g. "agents"
+	AccessKey       string
+	SecretKey       string
 }
 
 // S3Uploader uploads files to an S3-compatible backend.
@@ -50,13 +50,12 @@ func NewS3Uploader(cfg S3Config) *S3Uploader {
 	return &S3Uploader{cfg: cfg, client: s3client}
 }
 
-// Upload writes content to <bucket>/<prefix>/<key> and returns the S3 path.
+// Upload writes content to the private bucket and returns the S3 path.
 func (u *S3Uploader) Upload(ctx context.Context, key string, content io.Reader) (string, error) {
 	fullKey := key
 	if u.cfg.Prefix != "" {
 		fullKey = u.cfg.Prefix + "/" + key
 	}
-
 	_, err := u.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(u.cfg.Bucket),
 		Key:    aws.String(fullKey),
@@ -65,16 +64,37 @@ func (u *S3Uploader) Upload(ctx context.Context, key string, content io.Reader) 
 	if err != nil {
 		return "", fmt.Errorf("upload %s: %w", fullKey, err)
 	}
-
 	return fmt.Sprintf("s3://%s/%s", u.cfg.Bucket, fullKey), nil
 }
 
-// PublicURL returns the browser-accessible HTTPS URL for the given storage key.
-func (u *S3Uploader) PublicURL(key string) string {
+// PublicURLForKey returns the browser-accessible URL for a key without uploading.
+func (u *S3Uploader) PublicURLForKey(key string) string {
 	fullKey := key
 	if u.cfg.Prefix != "" {
 		fullKey = u.cfg.Prefix + "/" + key
 	}
 	base := strings.TrimRight(u.cfg.PublicBaseURL, "/")
 	return base + "/" + fullKey
+}
+
+// UploadPublic writes content to the public bucket and returns the browser-accessible URL.
+func (u *S3Uploader) UploadPublic(ctx context.Context, key string, content io.Reader) (string, error) {
+	fullKey := key
+	if u.cfg.Prefix != "" {
+		fullKey = u.cfg.Prefix + "/" + key
+	}
+	bucket := u.cfg.PublicBucket
+	if bucket == "" {
+		bucket = u.cfg.Bucket
+	}
+	_, err := u.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(fullKey),
+		Body:   content,
+	})
+	if err != nil {
+		return "", fmt.Errorf("upload public %s: %w", fullKey, err)
+	}
+	base := strings.TrimRight(u.cfg.PublicBaseURL, "/")
+	return base + "/" + fullKey, nil
 }

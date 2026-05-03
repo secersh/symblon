@@ -55,11 +55,13 @@ func main() {
 
 	// ── Object storage ───────────────────────────────────────────────────────
 	s3Bucket := os.Getenv("S3_BUCKET")
+	s3PublicBucket := envOr("S3_PUBLIC_BUCKET", s3Bucket)
 	s3cfg := upload.S3Config{
 		Endpoint:      os.Getenv("S3_ENDPOINT"),
-		PublicBaseURL: strings.TrimRight(supabaseURL, "/") + "/storage/v1/object/public/" + s3Bucket,
+		PublicBaseURL: strings.TrimRight(supabaseURL, "/") + "/storage/v1/object/public/" + s3PublicBucket,
 		Region:        envOr("S3_REGION", "auto"),
 		Bucket:        s3Bucket,
+		PublicBucket:  s3PublicBucket,
 		Prefix:        "agents",
 		AccessKey:     os.Getenv("S3_ACCESS_KEY"),
 		SecretKey:     os.Getenv("S3_SECRET_KEY"),

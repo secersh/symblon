@@ -224,7 +224,7 @@ func (h *PublishHandler) publishPackage(ctx context.Context, publisher, publishe
 			return nil, nil, fmt.Errorf("upload rule for %q: %w", s.ID, err)
 		}
 
-		imageURL := h.uploader.PublicURL(
+		imageURL := h.uploader.(*upload.S3Uploader).PublicURLForKey(
 			fmt.Sprintf("%s/%s/%s/themes/default/%s.svg", publisher, m.Handle, m.Version, s.ID),
 		)
 
@@ -274,7 +274,7 @@ func (h *PublishHandler) uploadAssets(ctx context.Context, publisher, handle, ve
 			defer f.Close()
 
 			key := fmt.Sprintf("%s/%s/%s/themes/%s/%s", publisher, handle, version, themeName, entry.Name())
-			if _, err := h.uploader.Upload(ctx, key, f); err != nil {
+			if _, err := h.uploader.UploadPublic(ctx, key, f); err != nil {
 				return fmt.Errorf("upload asset %s: %w", key, err)
 			}
 		}
