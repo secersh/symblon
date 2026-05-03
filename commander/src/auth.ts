@@ -6,6 +6,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 const SUPABASE_URL = 'https://kdddsotxwuuhklojgxrn.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-p5h6JltV9IxJk-_D-pXsA_OHAQA7DX';
 
 interface StoredToken {
   access_token: string;
@@ -60,7 +61,10 @@ function freePort(): Promise<number> {
 async function exchangeCode(code: string, verifier: string): Promise<StoredToken> {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=pkce`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_ANON_KEY,
+    },
     body: JSON.stringify({ auth_code: code, code_verifier: verifier }),
   });
   if (!res.ok) {

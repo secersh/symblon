@@ -7,16 +7,17 @@ import (
 
 // Agent is a registered agent version in the registry.
 type Agent struct {
-	ID           string    `json:"id"`
-	Publisher    string    `json:"publisher"`
-	Handle       string    `json:"handle"`
-	Version      string    `json:"version"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description"`
-	Visibility   string    `json:"visibility"`
-	PricingModel string    `json:"pricing_model"`
-	PriceUSD     *float64  `json:"price_usd,omitempty"`
-	PublishedAt  time.Time `json:"published_at"`
+	ID            string    `json:"id"`
+	Publisher     string    `json:"publisher"`      // UUID — internal identity
+	PublisherName string    `json:"publisher_name"` // display name, e.g. GitHub username
+	Handle        string    `json:"handle"`
+	Version       string    `json:"version"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Visibility    string    `json:"visibility"`
+	PricingModel  string    `json:"pricing_model"`
+	PriceUSD      *float64  `json:"price_usd,omitempty"`
+	PublishedAt   time.Time `json:"published_at"`
 }
 
 // Symbol is one symbol belonging to a registered agent.

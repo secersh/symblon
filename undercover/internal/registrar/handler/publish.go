@@ -50,6 +50,7 @@ func (h *PublishHandler) Publish(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "authorization required"})
 		return
 	}
+	publisherName := auth.PublisherName(c)
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxUploadSize)
 
@@ -81,7 +82,7 @@ func (h *PublishHandler) Publish(c *gin.Context) {
 		return
 	}
 
-	agent, symbols, err := h.publishPackage(c.Request.Context(), publisher, pkg)
+	agent, symbols, err := h.publishPackage(c.Request.Context(), publisher, publisherName, pkg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -194,12 +195,13 @@ func (r *readerAtToReaderImpl) Read(p []byte) (int, error) {
 	return n, err
 }
 
-func (h *PublishHandler) publishPackage(ctx context.Context, publisher string, pkg *agentpack.Package) (*store.Agent, []store.Symbol, error) {
+func (h *PublishHandler) publishPackage(ctx context.Context, publisher, publisherName string, pkg *agentpack.Package) (*store.Agent, []store.Symbol, error) {
 	m := pkg.Manifest
 
 	agent := &store.Agent{
-		Publisher:   publisher,
-		Handle:      m.Handle,
+		Publisher:     publisher,
+		PublisherName: publisherName,
+		Handle:        m.Handle,
 		Version:     m.Version,
 		Name:        m.Name,
 		Description: m.Description,

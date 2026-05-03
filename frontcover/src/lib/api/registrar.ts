@@ -13,6 +13,7 @@ export interface AgentSymbol {
 export interface Agent {
 	id: string;
 	publisher: string;
+	publisher_name: string;
 	handle: string;
 	version: string;
 	name: string;

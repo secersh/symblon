@@ -110,7 +110,7 @@
 												</svg>
 											</button>
 											<span class="text-[11px] text-base-content/40">
-												by <span class="font-medium">{agent.publisher}</span>
+												by <span class="font-medium">{agent.publisher_name || agent.publisher}</span>
 											</span>
 										</div>
 									</div>
@@ -218,7 +218,7 @@
 												</svg>
 											</button>
 											<span class="text-[11px] text-base-content/40">
-												by <span class="font-medium">{agent.publisher}</span>
+												by <span class="font-medium">{agent.publisher_name || agent.publisher}</span>
 											</span>
 										</div>
 									</div>

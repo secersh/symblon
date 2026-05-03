@@ -39,11 +39,11 @@ func (s *PostgresStore) SaveAgent(ctx context.Context, agent *Agent, symbols []S
 	defer tx.Rollback(ctx)
 
 	err = tx.QueryRow(ctx, `
-		INSERT INTO agents (publisher, handle, version, name, description, visibility, pricing_model, price_usd)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO agents (publisher, publisher_name, handle, version, name, description, visibility, pricing_model, price_usd)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		ON CONFLICT (publisher, handle, version) DO NOTHING
 		RETURNING id, published_at
-	`, agent.Publisher, agent.Handle, agent.Version, agent.Name,
+	`, agent.Publisher, agent.PublisherName, agent.Handle, agent.Version, agent.Name,
 		agent.Description, agent.Visibility, agent.PricingModel, agent.PriceUSD,
 	).Scan(&agent.ID, &agent.PublishedAt)
 	if err != nil {
@@ -71,11 +71,11 @@ func (s *PostgresStore) SaveAgent(ctx context.Context, agent *Agent, symbols []S
 func (s *PostgresStore) GetAgent(ctx context.Context, publisher, handle, version string) (*Agent, error) {
 	a := &Agent{}
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, publisher, handle, version, name, description, visibility, pricing_model, price_usd, published_at
+		SELECT id, publisher, publisher_name, handle, version, name, description, visibility, pricing_model, price_usd, published_at
 		FROM agents
 		WHERE publisher = $1 AND handle = $2 AND version = $3
 	`, publisher, handle, version).Scan(
-		&a.ID, &a.Publisher, &a.Handle, &a.Version, &a.Name,
+		&a.ID, &a.Publisher, &a.PublisherName, &a.Handle, &a.Version, &a.Name,
 		&a.Description, &a.Visibility, &a.PricingModel, &a.PriceUSD, &a.PublishedAt,
 	)
 	if err != nil {
@@ -88,7 +88,7 @@ func (s *PostgresStore) GetAgent(ctx context.Context, publisher, handle, version
 func (s *PostgresStore) ListAgents(ctx context.Context, publisher string) ([]*Agent, error) {
 	query := `
 		SELECT DISTINCT ON (publisher, handle)
-			id, publisher, handle, version, name, description, visibility, pricing_model, price_usd, published_at
+			id, publisher, publisher_name, handle, version, name, description, visibility, pricing_model, price_usd, published_at
 		FROM agents
 		WHERE visibility = 'public'
 	`
@@ -109,7 +109,7 @@ func (s *PostgresStore) ListAgents(ctx context.Context, publisher string) ([]*Ag
 	for rows.Next() {
 		a := &Agent{}
 		if err := rows.Scan(
-			&a.ID, &a.Publisher, &a.Handle, &a.Version, &a.Name,
+			&a.ID, &a.Publisher, &a.PublisherName, &a.Handle, &a.Version, &a.Name,
 			&a.Description, &a.Visibility, &a.PricingModel, &a.PriceUSD, &a.PublishedAt,
 		); err != nil {
 			return nil, fmt.Errorf("ListAgents: scan: %w", err)
@@ -201,7 +201,7 @@ func (s *PostgresStore) Uninstall(ctx context.Context, userID, agentID string) e
 // ListInstalledAgents returns the full agent records installed by the given user.
 func (s *PostgresStore) ListInstalledAgents(ctx context.Context, userID string) ([]*Agent, error) {
 	rows, err := s.pool.Query(ctx, `
-		SELECT a.id, a.publisher, a.handle, a.version, a.name, a.description,
+		SELECT a.id, a.publisher, a.publisher_name, a.handle, a.version, a.name, a.description,
 		       a.visibility, a.pricing_model, a.price_usd, a.published_at
 		FROM installs i
 		JOIN agents a ON a.id = i.agent_id
@@ -217,7 +217,7 @@ func (s *PostgresStore) ListInstalledAgents(ctx context.Context, userID string) 
 	for rows.Next() {
 		a := &Agent{}
 		if err := rows.Scan(
-			&a.ID, &a.Publisher, &a.Handle, &a.Version, &a.Name,
+			&a.ID, &a.Publisher, &a.PublisherName, &a.Handle, &a.Version, &a.Name,
 			&a.Description, &a.Visibility, &a.PricingModel, &a.PriceUSD, &a.PublishedAt,
 		); err != nil {
 			return nil, fmt.Errorf("ListInstalledAgents: scan: %w", err)
@@ -245,18 +245,21 @@ func (s *PostgresStore) GetInstall(ctx context.Context, userID, agentID string) 
 func (s *PostgresStore) Migrate(ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS agents (
-			id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			publisher     TEXT NOT NULL,
-			handle        TEXT NOT NULL,
-			version       TEXT NOT NULL,
-			name          TEXT NOT NULL,
-			description   TEXT NOT NULL,
-			visibility    TEXT NOT NULL CHECK (visibility IN ('public', 'org')),
-			pricing_model TEXT NOT NULL CHECK (pricing_model IN ('free', 'paid')),
-			price_usd     NUMERIC(10,2),
-			published_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+			id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			publisher      TEXT NOT NULL,
+			publisher_name TEXT NOT NULL DEFAULT '',
+			handle         TEXT NOT NULL,
+			version        TEXT NOT NULL,
+			name           TEXT NOT NULL,
+			description    TEXT NOT NULL,
+			visibility     TEXT NOT NULL CHECK (visibility IN ('public', 'org')),
+			pricing_model  TEXT NOT NULL CHECK (pricing_model IN ('free', 'paid')),
+			price_usd      NUMERIC(10,2),
+			published_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
 			UNIQUE (publisher, handle, version)
 		);
+
+		ALTER TABLE agents ADD COLUMN IF NOT EXISTS publisher_name TEXT NOT NULL DEFAULT '';
 
 		CREATE TABLE IF NOT EXISTS symbols (
 			id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),

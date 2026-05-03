@@ -21,12 +21,13 @@ type Uploader interface {
 
 // S3Config holds credentials for an S3-compatible storage backend (e.g. Supabase Storage).
 type S3Config struct {
-	Endpoint  string // e.g. <project>.supabase.co/storage/v1/s3
-	Region    string
-	Bucket    string
-	Prefix    string // e.g. "agents"
-	AccessKey string
-	SecretKey string
+	Endpoint      string // e.g. https://<project>.storage.supabase.co/storage/v1/s3
+	PublicBaseURL string // e.g. https://<project>.supabase.co/storage/v1/object/public/<bucket>
+	Region        string
+	Bucket        string
+	Prefix        string // e.g. "agents"
+	AccessKey     string
+	SecretKey     string
 }
 
 // S3Uploader uploads files to an S3-compatible backend.
@@ -69,14 +70,11 @@ func (u *S3Uploader) Upload(ctx context.Context, key string, content io.Reader) 
 }
 
 // PublicURL returns the browser-accessible HTTPS URL for the given storage key.
-// Assumes a Supabase Storage endpoint of the form: project.supabase.co/storage/v1/s3
 func (u *S3Uploader) PublicURL(key string) string {
-	endpoint := strings.TrimPrefix(u.cfg.Endpoint, "https://")
-	endpoint = strings.TrimPrefix(endpoint, "http://")
-	base := strings.TrimSuffix(endpoint, "/s3")
 	fullKey := key
 	if u.cfg.Prefix != "" {
 		fullKey = u.cfg.Prefix + "/" + key
 	}
-	return fmt.Sprintf("https://%s/object/public/%s/%s", base, u.cfg.Bucket, fullKey)
+	base := strings.TrimRight(u.cfg.PublicBaseURL, "/")
+	return base + "/" + fullKey
 }
