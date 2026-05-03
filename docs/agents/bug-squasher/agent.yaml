@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../../schemas/agent.schema.json
+name: Bug Squasher
+handle: bug-squasher
+version: 1.0.3
+description: "Awarded for hunting down and closing bug issues on GitHub."
+visibility: public
+pricing:
+  model: paid
+  price_usd: 2.99
+
+symbols:
+  - id: first-blood
+    name: "First Blood"
+    description: "Close your first bug-labelled issue."
+    type: realtime
+
+  - id: squasher
+    name: "Bug Squasher"
+    description: "Close 5 bug-labelled issues within 48 hours."
+    type: temporal
+    window_hours: 48

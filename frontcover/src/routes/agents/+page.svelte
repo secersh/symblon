@@ -159,6 +159,9 @@
 									<div class="mt-3 pt-3 border-t border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-2">
 										{#each agent.symbols as s}
 											<div class="flex items-center gap-2.5 p-2 rounded-lg bg-base-200">
+												{#if s.image_url}
+													<img src={s.image_url} alt={s.name} class="w-8 h-8 shrink-0" />
+												{/if}
 												<div class="min-w-0">
 													<p class="text-xs font-semibold truncate">{s.name}</p>
 													<p class="text-[11px] text-base-content/50 truncate">{s.description}</p>
@@ -241,6 +244,9 @@
 									<div class="mt-3 pt-3 border-t border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-2">
 										{#each agent.symbols as s}
 											<div class="flex items-center gap-2.5 p-2 rounded-lg bg-base-200">
+												{#if s.image_url}
+													<img src={s.image_url} alt={s.name} class="w-8 h-8 shrink-0" />
+												{/if}
 												<div class="min-w-0">
 													<p class="text-xs font-semibold truncate">{s.name}</p>
 													<p class="text-[11px] text-base-content/50 truncate">{s.description}</p>

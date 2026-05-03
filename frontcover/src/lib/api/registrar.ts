@@ -7,6 +7,7 @@ export interface AgentSymbol {
 	description: string;
 	type: 'realtime' | 'temporal';
 	window_hours: number;
+	image_url?: string;
 }
 
 export interface Agent {
